@@ -1,4 +1,4 @@
-'use dynamic';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
 import * as Utils from "@/lib/utils";

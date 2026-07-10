@@ -1,7 +1,6 @@
-'use dynamic';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
-import * as Utils from "@/lib/utils";
 import sampleCompanies from "@/data/sample-companies.json";
 
 export async function GET(request: NextRequest) {
@@ -13,9 +12,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ companies: [] });
     }
 
-    const filtered = sampleCompanies.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
+    const filtered = sampleCompanies.companies.filter(
+      (c: any) =>
+        c.legalName.toLowerCase().includes(query) ||
         c.gstNumber.toLowerCase().includes(query) ||
         c.website?.toLowerCase().includes(query)
     );

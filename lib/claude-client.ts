@@ -7,9 +7,6 @@ class ClaudeClient {
 
   constructor() {
     this.apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || "";
-    if (!this.apiKey) {
-      console.error("⚠️ WARNING: ANTHROPIC_API_KEY not found in environment");
-    }
   }
 
   async analyzeWithContract(systemPrompt: string, userMessage: string, agentName: string): Promise<Types.AgentResponse> {
@@ -24,7 +21,7 @@ class ClaudeClient {
     try {
       console.log(`[${agentName}] Calling Claude API...`);
       if (!this.apiKey) {
-        throw new Error("Claude API key not configured. Check .env.local file.");
+        throw new Error("Claude API key not configured.");
       }
 
       const response = await this.makeRequest(systemPrompt, userMessage);
@@ -42,11 +39,10 @@ class ClaudeClient {
           evidence = [{
             source: agentName,
             confidence: jsonData.confidence || 50,
-            verified: false,
           }];
         }
       } catch (parseError) {
-        console.warn(`[${agentName}] JSON parse warning:`, parseError);
+        console.warn(`[${agentName}] JSON parse warning`);
       }
 
       const result: Types.AgentResponse = {
@@ -90,7 +86,6 @@ class ClaudeClient {
       messages: [{ role: "user", content: userMessage }],
     };
 
-    console.log(`Making API request to ${url}`);
     const response = await fetch(url, {
       method: "POST",
       headers: {

@@ -41,7 +41,14 @@ class AIOrchestrator {
         amount: 5000000, 
         currency: "INR", 
         basis: "5% of turnover",
-        calculationDetails: "Based on annual turnover analysis"
+        calculationDetails: {
+          turnoverBased: 0.05,
+          workingCapitalBased: undefined,
+          netWorthBased: undefined,
+          internalCap: 50000000,
+          adjustmentFactor: 1.0,
+          adjustmentReason: "Standard assessment"
+        }
       };
       assessment.paymentTerms = "Net 30 days";
       assessment.reviewDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);

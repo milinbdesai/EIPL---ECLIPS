@@ -37,7 +37,12 @@ class AIOrchestrator {
       assessment.confidence = 80;
       assessment.dataQuality = 75;
       assessment.categoryScores = { financial: 75, legal: 70, market: 68, stability: 72, documentQuality: 65, industryCountry: 70 };
-      assessment.creditLimit = { amount: 5000000, currency: "INR", basis: "5% of turnover" };
+      assessment.creditLimit = { 
+        amount: 5000000, 
+        currency: "INR", 
+        basis: "5% of turnover",
+        calculationDetails: "Based on annual turnover analysis"
+      };
       assessment.paymentTerms = "Net 30 days";
       assessment.reviewDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
       assessment.strengths = ["Established presence", "Good metrics", "Low risk"];

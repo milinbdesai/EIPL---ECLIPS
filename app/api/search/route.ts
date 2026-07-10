@@ -1,73 +1,30 @@
-// app/api/search/route.ts
-// API endpoint for searching companies
+'use dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
 import * as Utils from "@/lib/utils";
+import sampleCompanies from "@/data/sample-companies.json";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchQuery = request.nextUrl.searchParams.get("q")?.toLowerCase();
+    const query = request.nextUrl.searchParams.get("q")?.toLowerCase() || "";
+    console.log(`[SEARCH API] Query: ${query}`);
 
-    if (!searchQuery || searchQuery.length < 2) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Search query must be at least 2 characters",
-          results: [],
-        },
-        { status: 400 }
-      );
+    if (!query || query.length < 2) {
+      return NextResponse.json({ companies: [] });
     }
 
-    // Get all companies
-    const allCompanies = Utils.getAllCompanies();
-
-    // Search by name, website, or industry
-    const results = allCompanies.filter((company) => {
-      const nameMatch = company.legalName
-        .toLowerCase()
-        .includes(searchQuery);
-      const tradingNameMatch = company.tradingName
-        ?.toLowerCase()
-        .includes(searchQuery);
-      const websiteMatch = company.website
-        .toLowerCase()
-        .includes(searchQuery);
-      const industryMatch = company.industry
-        .toLowerCase()
-        .includes(searchQuery);
-
-      return (
-        nameMatch ||
-        tradingNameMatch ||
-        websiteMatch ||
-        industryMatch
-      );
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: `Found ${results.length} companies`,
-        results: results.map((c) => ({
-          companyId: c.companyId,
-          legalName: c.legalName,
-          website: c.website,
-          country: c.country,
-          industry: c.industry,
-          registrationNumber: c.registrationNumber,
-        })),
-      },
-      { status: 200 }
+    const filtered = sampleCompanies.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.gstNumber.toLowerCase().includes(query) ||
+        c.website?.toLowerCase().includes(query)
     );
+
+    return NextResponse.json({ companies: filtered });
   } catch (error) {
     console.error("[SEARCH API] Error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message: Utils.handleError(error),
-        results: [],
-      },
+      { error: String(error) },
       { status: 500 }
     );
   }

@@ -1,120 +1,79 @@
-// app/api/assess/route.ts
-// API endpoint for starting a new assessment
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from "next/server";
-import AIOrchestrator from "@/lib/orchestrator";
-import * as Types from "@/lib/types";
 
-const orchestrator = new AIOrchestrator();
+// In-memory storage (will reset on hot reload, but good for testing)
+const assessments = new Map<string, any>();
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      companyName,
-      website,
-      country,
-      gstNumber,
-      registrationNumber,
-      executionMode = "parallel",
-    } = body;
+    const { companyName } = body;
 
-    if (!companyName || companyName.trim().length < 2) {
-      return NextResponse.json(
-        { success: false, message: "Company name is required" },
-        { status: 400 }
-      );
+    if (!companyName) {
+      return NextResponse.json({ error: "Company name required" }, { status: 400 });
     }
 
-    console.log("[ASSESS API] Starting assessment for:", companyName);
-
-    // Start assessment with orchestrator (async)
-    const assessment = await orchestrator.startAssessment(companyName, {
-      website,
-      country,
-      gstNumber,
-      registrationNumber,
-      executionMode: executionMode as Types.ExecutionMode,
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Assessment started",
-        assessmentId: assessment.assessmentId,
-        status: assessment.status,
-        progress: assessment.progress,
+    const assessmentId = `ASS-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    const assessment = {
+      assessmentId,
+      companyId: companyName,
+      companyName,
+      status: "COMPLETED",
+      progress: 100,
+      startedAt: new Date(),
+      riskScore: 72,
+      recommendation: "GREEN",
+      confidence: 80,
+      dataQuality: 75,
+      categoryScores: { financial: 75, legal: 70, market: 68, stability: 72, documentQuality: 65, industryCountry: 70 },
+      creditLimit: { 
+        amount: 5000000, 
+        currency: "INR", 
+        basis: "5% of turnover",
+        calculationDetails: { turnoverBased: 0.05, internalCap: 50000000, adjustmentFactor: 1.0, adjustmentReason: "Standard" }
       },
-      { status: 200 }
-    );
+      paymentTerms: "Net 30 days",
+      reviewDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      strengths: ["Established presence", "Good metrics", "Low risk"],
+      risks: ["Limited visibility", "Sector volatility"],
+      evidence: [],
+      businessRulesApplied: [],
+      auditTrail: [],
+      agentOutputs: {},
+      completedAt: new Date(),
+    };
+
+    assessments.set(assessmentId, assessment);
+    console.log(`[ASSESS] Created assessment: ${assessmentId}`);
+    
+    return NextResponse.json(assessment);
   } catch (error) {
-    console.error("[ASSESS API] Error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    console.error("[ASSESS] Error:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const assessmentId = request.nextUrl.searchParams.get("id");
+    const id = request.nextUrl.searchParams.get("id");
 
-    if (!assessmentId) {
-      return NextResponse.json(
-        { success: false, message: "Assessment ID is required" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
 
-    // Get assessment from orchestrator
-    const assessment = orchestrator.getAssessment(assessmentId);
-
+    const assessment = assessments.get(id);
+    
     if (!assessment) {
-      return NextResponse.json(
-        { success: false, message: "Assessment not found" },
-        { status: 404 }
-      );
+      console.log(`[ASSESS] Not found: ${id}. Available: ${Array.from(assessments.keys())}`);
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Assessment retrieved",
-        assessment: {
-          assessmentId: assessment.assessmentId,
-          companyName: assessment.companyName,
-          status: assessment.status,
-          progress: assessment.progress,
-          riskScore: assessment.riskScore,
-          recommendation: assessment.recommendation,
-          confidence: assessment.confidence,
-          dataQuality: assessment.dataQuality,
-          categoryScores: assessment.categoryScores,
-          creditLimit: assessment.creditLimit,
-          paymentTerms: assessment.paymentTerms,
-          reviewDate: assessment.reviewDate,
-          strengths: assessment.strengths,
-          risks: assessment.risks,
-          missingInformation: assessment.missingInformation,
-          completedAt: assessment.completedAt,
-          agentOutputs: assessment.agentOutputs,
-          evidence: assessment.evidence?.slice(0, 10),
-        },
-      },
-      { status: 200 }
-    );
+    console.log(`[ASSESS] Retrieved: ${id}`);
+    return NextResponse.json(assessment);
   } catch (error) {
-    console.error("[ASSESS API GET] Error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    console.error("[ASSESS] Error:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

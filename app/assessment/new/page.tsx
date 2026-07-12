@@ -1,5 +1,4 @@
-// app/assessment/new/page.tsx
-// Page for starting a new assessment
+export const dynamic = 'force-dynamic';
 
 import AssessmentFlow from "@/app/_components/AssessmentFlow";
 
@@ -38,9 +37,6 @@ export default function NewAssessmentPage() {
   );
 }
 
-/**
- * Info card component
- */
 function InfoCard({
   title,
   description,

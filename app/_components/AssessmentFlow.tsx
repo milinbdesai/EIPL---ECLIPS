@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import RiskCard from "@/app/_components/RiskCard";
 import * as Types from "@/lib/types";
 
 function AssessmentFlowContent() {
-  const [formData, setFormData] = useState({ companyName: "" });
+  const [formData, setFormData] = useState({ 
+    companyName: "",
+    gstNumber: "",
+    country: "India"
+  });
   const [loading, setLoading] = useState(false);
   const [assessment, setAssessment] = useState<Types.Assessment | null>(null);
-  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,21 +20,8 @@ function AssessmentFlowContent() {
 
     setLoading(true);
     try {
-      const res = await axios.post("/api/assess", {
-        companyName: formData.companyName,
-      });
+      const res = await axios.post("/api/assess", formData);
       setAssessment(res.data);
-
-      const pollInterval = setInterval(async () => {
-        const statusRes = await axios.get(`/api/assess?id=${res.data.assessmentId}`);
-        if (statusRes.data.status === "COMPLETED" || statusRes.data.status === "FAILED") {
-          setAssessment(statusRes.data);
-          clearInterval(pollInterval);
-          setLoading(false);
-        } else {
-          setAssessment(statusRes.data);
-        }
-      }, 2000);
     } catch (error) {
       console.error("Assessment error:", error);
       setLoading(false);
@@ -51,29 +40,62 @@ function AssessmentFlowContent() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Company Name or GST
+              Company Name *
             </label>
             <input
               type="text"
               value={formData.companyName}
-              onChange={(e) => setFormData({ companyName: e.target.value })}
-              placeholder="e.g., Elcon Engineers or GST number"
+              onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+              placeholder="e.g., Elcon Engineers"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              GST Number (optional)
+            </label>
+            <input
+              type="text"
+              value={formData.gstNumber}
+              onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+              placeholder="e.g., 27AABCT1234A1Z5"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Country
+            </label>
+            <select
+              value={formData.country}
+              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option>India</option>
+              <option>UAE</option>
+              <option>USA</option>
+              <option>UK</option>
+              <option>Singapore</option>
+              <option>Other</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Assessing..." : "Start Assessment"}
+            {loading ? "Analyzing..." : "Start Assessment"}
           </button>
         </form>
 
         {loading && (
           <div className="mt-8 space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-800">Processing assessment...</p>
+              <p className="text-sm text-blue-800">Researching company...</p>
             </div>
           </div>
         )}
